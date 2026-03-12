@@ -1,0 +1,31 @@
+{
+  "id": "hasterolls5e",
+  "title": "Haste Rolls 5e",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "12",
+    "verified": "12"
+  },
+  "description": "<p>Haste mode for rolls by skipping the roll config dialogs.</p>",
+  "authors": [
+    {
+      "name": "kaelad",
+      "discord": "kaelad"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "4.3.9",
+          "verified": "4.3.9"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "src/hasterolls5e.js"
+  ]
+}
