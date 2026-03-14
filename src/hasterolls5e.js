@@ -2,8 +2,8 @@ Hooks.once("init", () => {
   console.log("Haste Rolls 5e init");
 
   game.settings.register("hasterolls5e", "skipRollConfig", {
-    name: "Skip Roll Configuration Dialogs",
-    hint: "Skip the roll configuration dialog when rolling D20 Tests, damage, and healing rolls. Hold Shift to show the dialogs.",
+    name: "hasterolls5e.skipRollConfig.name",
+    hint: "hasterolls5e.skipRollConfig.hint",
     scope: "client",
     config: true,
     requiresReload: false,
@@ -12,8 +12,8 @@ Hooks.once("init", () => {
   });
 
   game.settings.register("hasterolls5e", "autoRollDamage", {
-    name: "Auto Roll Damage",
-    hint: "Automatically trigger the damage roll if the attack roll hits. For players, will only happen if Attack Roll Visibility is enabled.",
+    name: "hasterolls5e.autoRollDamage.name",
+    hint: "hasterolls5e.autoRollDamage.hint",
     scope: "world",
     config: true,
     requiresReload: false,
