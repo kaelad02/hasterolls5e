@@ -21,13 +21,12 @@ Hooks.once("init", () => {
     default: false,
   });
 
-  // implement autoRollDamage on system version 5.1.0 or newer with a hook, older versions with libWrapper
+  // implement autoRollDamage on system version 5.1.0 or newer with the postRollAttack hook, older versions with the pre/postUseActivity hooks
   const system51 = foundry.utils.isNewerVersion(game.system.version, "5.0.99");
   if (system51)
     Hooks.on("dnd5e.postRollAttack", autoRollDamage);
   else
-    libWrapper.register("hasterolls5e", "dnd5e.documents.activity.AttackActivity.prototype._triggerSubsequentActions",
-      triggerSubsequentActions, "MIXED");
+    Hooks.on("dnd5e.postUseActivity", postUseActivity);
 });
 
 Hooks.on("dnd5e.preRollD20TestV2", (config, dialog, message) => {
@@ -62,14 +61,26 @@ function autoRollDamage(rolls, data) {
   }
 }
 
-async function triggerSubsequentActions(wrapped, config, results) {
+function postUseActivity(activity, usageConfig, results) {
+  // only handle Attack activities
+  if (activity.type !== "attack") return;
   // check if Auto Roll Damage is enabled
   const autoRollDamage = game.settings.get("hasterolls5e", "autoRollDamage");
-  if (!autoRollDamage) return wrapped(config, results);
+  if (!autoRollDamage) return;
   // check if GM or that Attack Roll Visibility isn't none
   const attackRollVisibility = game.settings.get("dnd5e", "attackRollVisibility");
-  if (!game.user.isGM && attackRollVisibility === "none") return wrapped(config, results);
+  if (!game.user.isGM && attackRollVisibility === "none") return;
 
+  // turn off the system's subsequent actions since we'll trigger the attack here
+  usageConfig.subsequentActions = false;
+
+  /* Rolling the attack and damage can be done async, but this hook needs to return immediately so setting
+     subsequentActions to false is picked up by the system's code. We'd have a race condition if this function
+     was async, so it's split in two. */
+  triggerSubsequentActions.call(activity, usageConfig, results);
+}
+
+async function triggerSubsequentActions(config, results) {
   const rolls = await this.rollAttack({event: config.event}, {}, {data: {"flags.dnd5e.originatingMessage": results.message?.id}});
   if (rolls && rolls[0].isSuccess) {
     const lastAttack = results.message.getAssociatedRolls("attack").pop();
