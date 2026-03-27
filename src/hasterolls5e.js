@@ -38,8 +38,16 @@ Hooks.on("dnd5e.preRollDamageV2", (config, dialog, message) => {
 });
 
 function handleRoll(config, dialog) {
+  // system version 5.1.0 changed the key presses so now shift+alt, for example, forces advantage
+  // tweak it so only holding Shift shows the dialog
+  const system51 = foundry.utils.isNewerVersion(game.system.version, "5.0.99");
   const skipRollConfig = game.settings.get("hasterolls5e", "skipRollConfig");
-  if (skipRollConfig)
+  if (system51 && skipRollConfig) {
+    const normal = dnd5e.utils.areKeysPressed(config.event, "skipDialogNormal");
+    const advantage = dnd5e.utils.areKeysPressed(config.event, "skipDialogAdvantage");
+    const disadvantage = dnd5e.utils.areKeysPressed(config.event, "skipDialogDisadvantage");
+    dialog.configure = normal && !advantage && !disadvantage;
+  } else if (skipRollConfig)
     dialog.configure = dnd5e.utils.areKeysPressed(config.event, "skipDialogNormal");
 }
 
