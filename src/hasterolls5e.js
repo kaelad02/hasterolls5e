@@ -27,7 +27,7 @@ Hooks.once("init", () => {
     Hooks.on("dnd5e.postRollAttack", autoRollDamage);
   else
     libWrapper.register("hasterolls5e", "dnd5e.documents.activity.AttackActivity.prototype._triggerSubsequentActions",
-      triggerSubsequentActions, "OVERRIDE");
+      triggerSubsequentActions, "MIXED");
 });
 
 Hooks.on("dnd5e.preRollD20TestV2", (config, dialog, message) => {
@@ -62,16 +62,15 @@ function autoRollDamage(rolls, data) {
   }
 }
 
-async function triggerSubsequentActions(config, results) {
-  const rolls = await this.rollAttack({event: config.event}, {}, {data: {"flags.dnd5e.originatingMessage": results.message?.id}});
-
+async function triggerSubsequentActions(wrapped, config, results) {
   // check if Auto Roll Damage is enabled
   const autoRollDamage = game.settings.get("hasterolls5e", "autoRollDamage");
-  if (!autoRollDamage) return;
+  if (!autoRollDamage) return wrapped(config, results);
   // check if GM or that Attack Roll Visibility isn't none
   const attackRollVisibility = game.settings.get("dnd5e", "attackRollVisibility");
-  if (!game.user.isGM && attackRollVisibility === "none") return;
+  if (!game.user.isGM && attackRollVisibility === "none") return wrapped(config, results);
 
+  const rolls = await this.rollAttack({event: config.event}, {}, {data: {"flags.dnd5e.originatingMessage": results.message?.id}});
   if (rolls && rolls[0].isSuccess) {
     const lastAttack = results.message.getAssociatedRolls("attack").pop();
     const attackMode = rolls[0].options.attackMode;
