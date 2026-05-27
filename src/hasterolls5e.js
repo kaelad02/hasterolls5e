@@ -130,6 +130,7 @@ async function triggerSubsequentActions(config, results) {
     const dialogConfig = {};
     if ( isCritical ) dialogConfig.options = { defaultButton: "critical" };
 
-    this.rollDamage({ event: config.event, ammunition, attackMode, isCritical }, dialogConfig);
+    // intentionally not passing in an event so holding ALT for advantage on attack doesn't turn damage into a crit
+    this.rollDamage({ ammunition, attackMode, isCritical }, dialogConfig);
   }
 }
