@@ -63,10 +63,32 @@ function autoRollDamage(rolls, data) {
     // get original Activity message
     const attackMessage = rolls[0].parent;
     const messageId = attackMessage.getFlag("dnd5e", "originatingMessage");
-    // simulate a click on the Activity message's Damage button
-    const activityMessage = document.querySelector(`#chat li[data-message-id="${messageId}"]`);
-    activityMessage?.querySelector('button[data-action="rollDamage"]')?.click();
+    // roll damage similar to clicking on the Damage button
+    _rollDamage.call(data.subject, game.messages.get(messageId));
   }
+}
+
+/* Adapted from AttackActivity's private #rollDamage function */
+function _rollDamage(message) {
+  const lastAttack = message.getAssociatedRolls("attack").pop();
+  const attackMode = lastAttack?.getFlag("dnd5e", "roll.attackMode");
+
+  // Fetch the ammunition used with the last attack roll
+  let ammunition;
+  const actor = lastAttack?.getAssociatedActor();
+  if ( actor ) {
+    const storedData = lastAttack.getFlag("dnd5e", "roll.ammunitionData");
+    ammunition = storedData
+      ? new Item.implementation(storedData, { parent: actor })
+      : actor.items.get(lastAttack.getFlag("dnd5e", "roll.ammunition"));
+  }
+
+  const isCritical = lastAttack?.rolls[0]?.isCritical;
+  const dialogConfig = {};
+  if ( isCritical ) dialogConfig.options = { defaultButton: "critical" };
+
+  // intentionally not passing in an event so holding ALT for advantage on attack doesn't turn damage into a crit
+  this.rollDamage({ ammunition, attackMode, isCritical }, dialogConfig);
 }
 
 function postUseActivity(activity, usageConfig, results) {
