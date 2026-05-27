@@ -11,6 +11,16 @@ Hooks.once("init", () => {
     default: true,
   });
 
+  game.settings.register("hasterolls5e", "skipActivityUsage", {
+    name: "hasterolls5e.skipActivityUsage.name",
+    hint: "hasterolls5e.skipActivityUsage.hint",
+    scope: "client",
+    config: true,
+    requiresReload: false,
+    type: Boolean,
+    default: false,
+  });
+
   game.settings.register("hasterolls5e", "autoRollDamage", {
     name: "hasterolls5e.autoRollDamage.name",
     hint: "hasterolls5e.autoRollDamage.hint",
@@ -30,18 +40,22 @@ Hooks.once("init", () => {
 });
 
 Hooks.on("dnd5e.preRollD20TestV2", (config, dialog, message) => {
-  handleRoll(config, dialog);
+  handleRoll(config, dialog, "skipRollConfig");
 });
 
 Hooks.on("dnd5e.preRollDamageV2", (config, dialog, message) => {
-  handleRoll(config, dialog);
+  handleRoll(config, dialog, "skipRollConfig");
 });
 
-function handleRoll(config, dialog) {
+Hooks.on("dnd5e.preUseActivity", (activity, usageConfig, dialogConfig, messageConfig) => {
+  handleRoll(usageConfig, dialogConfig, "skipActivityUsage");
+});
+
+function handleRoll(config, dialog, settingKey) {
   // system version 5.1.0 changed the key presses so now shift+alt, for example, forces advantage
   // tweak it so only holding Shift shows the dialog
   const system51 = foundry.utils.isNewerVersion(game.system.version, "5.0.99");
-  const skipRollConfig = game.settings.get("hasterolls5e", "skipRollConfig");
+  const skipRollConfig = game.settings.get("hasterolls5e", settingKey);
   if (system51 && skipRollConfig) {
     const normal = dnd5e.utils.areKeysPressed(config.event, "skipDialogNormal");
     const advantage = dnd5e.utils.areKeysPressed(config.event, "skipDialogAdvantage");
