@@ -73,7 +73,7 @@ function autoRollDamage(rolls, data) {
   const attackRollVisibility = game.settings.get("dnd5e", "attackRollVisibility");
   if (!game.user.isGM && attackRollVisibility === "none") return;
 
-  if (rolls[0].isSuccess) {
+  if (rolls[0].isSuccess && !rolls[0].isFumble) {
     // get original Activity message
     const attackMessage = rolls[0].parent;
     if (foundry.utils.isNewerVersion(game.system.version, "5.9.99"))
