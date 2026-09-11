@@ -73,13 +73,28 @@ function autoRollDamage(rolls, data) {
   const attackRollVisibility = game.settings.get("dnd5e", "attackRollVisibility");
   if (!game.user.isGM && attackRollVisibility === "none") return;
 
-  if (rolls[0].isSuccess) {
+  if (rolls[0].isSuccess && !rolls[0].isFumble) {
     // get original Activity message
     const attackMessage = rolls[0].parent;
-    const messageId = attackMessage.getFlag("dnd5e", "originatingMessage");
-    // roll damage similar to clicking on the Damage button
-    _rollDamage.call(data.subject, game.messages.get(messageId));
+    if (foundry.utils.isNewerVersion(game.system.version, "5.9.99"))
+      _rollDamage60.call(data.subject, attackMessage.system.origin);
+    else {
+      const messageId = attackMessage.getFlag("dnd5e", "originatingMessage");
+      // roll damage similar to clicking on the Damage button
+      _rollDamage.call(data.subject, game.messages.get(messageId));
+    }
   }
+}
+
+/* Adapted from AttackActivity's private #rollDamage function */
+function _rollDamage60(message) {
+  const lastAttack = message.getAssociatedRolls("attack").pop();
+  const { ability, ammunitionItem: ammunition, mode: attackMode } = lastAttack?.system ?? {};
+  const isCritical = lastAttack?.rolls[0]?.isCritical;
+  const dialogConfig = {}
+  if ( isCritical ) dialogConfig.options = { defaultButton: "critical" };
+  // intentionally not passing in an event so holding ALT for advantage on attack doesn't turn damage into a crit
+  this.rollDamage({ ability, ammunition, attackMode, isCritical }, dialogConfig);
 }
 
 /* Adapted from AttackActivity's private #rollDamage function */
